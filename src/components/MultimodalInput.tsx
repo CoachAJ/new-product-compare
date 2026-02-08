@@ -1,12 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { Camera, Upload, CheckCircle2, Loader2, Sparkles, Crown, Target, Zap } from 'lucide-react';
+import { Camera, Upload, CheckCircle2, Loader2, Sparkles, Star, Users } from 'lucide-react';
 import { MimeGuard } from '../utils/MimeGuard';
 
 interface ImageInputProps {
     label: string;
     onImageCaptured: (dataUrl: string) => void;
     captured: boolean;
-    variant: 'gold' | 'cyan';
+    variant: 'gold' | 'slate';
 }
 
 const ImageUploadCard: React.FC<ImageInputProps> = ({ label, onImageCaptured, captured, variant }) => {
@@ -26,27 +26,20 @@ const ImageUploadCard: React.FC<ImageInputProps> = ({ label, onImageCaptured, ca
     };
 
     const isGold = variant === 'gold';
-
-    // Use inline styles for reliable color rendering
-    const styles = {
-        border: captured
-            ? `2px solid ${isGold ? '#FFD700' : '#22D3EE'}`
-            : `2px dashed ${isGold ? 'rgba(255, 215, 0, 0.3)' : 'rgba(34, 211, 238, 0.3)'}`,
-        background: captured
-            ? `linear-gradient(135deg, ${isGold ? 'rgba(255, 215, 0, 0.15)' : 'rgba(34, 211, 238, 0.15)'} 0%, transparent 100%)`
-            : `linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%)`,
-        boxShadow: captured
-            ? `0 0 30px ${isGold ? 'rgba(255, 215, 0, 0.2)' : 'rgba(34, 211, 238, 0.2)'}`
-            : 'none',
-    };
-
-    const accentColor = isGold ? '#FFD700' : '#22D3EE';
+    const accentColor = isGold ? '#b45309' : '#475569';
+    const bgColor = isGold ? 'rgba(254, 243, 199, 0.5)' : 'rgba(241, 245, 249, 0.5)';
+    const borderColor = captured
+        ? (isGold ? '#f59e0b' : '#94a3b8')
+        : (isGold ? 'rgba(245, 158, 11, 0.3)' : 'rgba(148, 163, 184, 0.3)');
 
     return (
         <div
             onClick={() => fileInputRef.current?.click()}
-            style={styles}
-            className="relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] group"
+            className="rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md group overflow-hidden"
+            style={{
+                border: `2px ${captured ? 'solid' : 'dashed'} ${borderColor}`,
+                background: captured ? bgColor : 'rgba(255, 255, 255, 0.6)',
+            }}
         >
             <input
                 type="file"
@@ -56,57 +49,50 @@ const ImageUploadCard: React.FC<ImageInputProps> = ({ label, onImageCaptured, ca
                 className="hidden"
             />
 
-            {/* Preview or Placeholder */}
-            <div className="aspect-[4/3] relative">
+            {/* Compact Preview/Placeholder */}
+            <div className="aspect-[3/2] relative p-3">
                 {preview ? (
-                    <img src={preview} alt={label} className="w-full h-full object-cover" />
+                    <img src={preview} alt={label} className="w-full h-full object-cover rounded-lg" />
                 ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-4">
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-2">
                         <div
-                            className="w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform"
+                            className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
                             style={{ backgroundColor: `${accentColor}15` }}
                         >
-                            <Camera className="w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" style={{ color: accentColor }} />
+                            <Camera className="w-5 h-5" style={{ color: accentColor }} />
                         </div>
-                        <div className="text-center">
-                            <p className="font-bold text-sm" style={{ color: accentColor }}>{label}</p>
-                            <p className="text-xs opacity-40 mt-1">Click to upload</p>
-                        </div>
+                        <span className="text-xs font-semibold" style={{ color: accentColor }}>{label}</span>
                     </div>
                 )}
 
-                {/* Loading Overlay */}
                 {loading && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                        <Loader2 className="w-8 h-8 animate-spin" style={{ color: accentColor }} />
+                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg">
+                        <Loader2 className="w-6 h-6 animate-spin" style={{ color: accentColor }} />
                     </div>
                 )}
 
-                {/* Captured Badge */}
                 {captured && !loading && (
                     <div
-                        className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-lg"
-                        style={{ backgroundColor: accentColor }}
+                        className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center shadow-sm"
+                        style={{ backgroundColor: isGold ? '#22c55e' : '#22c55e' }}
                     >
-                        <CheckCircle2 className="w-5 h-5 text-black" />
+                        <CheckCircle2 className="w-4 h-4 text-white" />
                     </div>
                 )}
             </div>
 
-            {/* Bottom Action Bar */}
+            {/* Compact Footer */}
             <div
-                className="px-4 py-3 border-t"
+                className="px-3 py-2 border-t flex items-center justify-center gap-1.5"
                 style={{
-                    borderColor: `${accentColor}30`,
-                    backgroundColor: `${accentColor}08`
+                    borderColor: `${accentColor}20`,
+                    backgroundColor: `${accentColor}05`
                 }}
             >
-                <div className="flex items-center justify-center gap-2">
-                    <Upload className="w-4 h-4" style={{ color: accentColor }} />
-                    <span className="text-xs font-bold uppercase tracking-wider" style={{ color: accentColor }}>
-                        {captured ? 'Replace' : 'Upload'}
-                    </span>
-                </div>
+                <Upload className="w-3 h-3" style={{ color: accentColor }} />
+                <span className="text-xs font-medium" style={{ color: accentColor }}>
+                    {captured ? 'Replace' : 'Upload'}
+                </span>
             </div>
         </div>
     );
@@ -137,92 +123,60 @@ export const MultimodalInput: React.FC<MultimodalInputProps> = ({ onImagesReady,
     const compProgress = [images.compFront, images.compLabel].filter(Boolean).length;
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-4">
+        <div className="w-full max-w-5xl mx-auto px-4">
             {/* Header */}
-            <div className="text-center mb-12">
+            <div className="text-center mb-8">
                 <div
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border mb-6"
-                    style={{
-                        background: 'linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, rgba(34, 211, 238, 0.1) 100%)',
-                        borderColor: 'rgba(255, 255, 255, 0.1)'
-                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4"
+                    style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}
                 >
-                    <Sparkles className="w-4 h-4 animate-pulse" style={{ color: '#FFD700' }} />
-                    <span
-                        className="text-sm font-bold"
-                        style={{
-                            background: 'linear-gradient(90deg, #FFD700, #22D3EE)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent'
-                        }}
-                    >
-                        AI-POWERED CLINICAL ANALYSIS
+                    <Sparkles className="w-4 h-4" style={{ color: '#f59e0b' }} />
+                    <span className="text-sm font-semibold" style={{ color: '#b45309' }}>
+                        AI Clinical Analysis
                     </span>
-                    <Sparkles className="w-4 h-4 animate-pulse" style={{ color: '#22D3EE' }} />
                 </div>
-                <h1
-                    className="text-4xl md:text-5xl font-black tracking-tight mb-4"
-                    style={{
-                        background: 'linear-gradient(90deg, #FFD700, #FFA500, #FFD700)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent'
-                    }}
-                >
-                    TALE OF THE TAPE
-                </h1>
-                <p className="text-lg opacity-50 max-w-xl mx-auto">
-                    Upload product images for head-to-head clinical comparison
+                <h1 className="heading-xl mb-2">Product Comparison</h1>
+                <p className="text-sm text-slate-500 max-w-md mx-auto">
+                    Upload images of both products for head-to-head analysis
                 </p>
             </div>
 
-            {/* Main Comparison Grid - Side by Side */}
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-stretch">
+            {/* Side-by-Side Comparison */}
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch">
 
-                {/* YOUR PRODUCT - Left Side */}
-                <div className="flex-1 relative">
-                    {/* Glow Effect */}
+                {/* Your Product */}
+                <div className="flex-1">
                     <div
-                        className="absolute -inset-4 blur-3xl opacity-30 -z-10"
-                        style={{ background: 'radial-gradient(ellipse at center, rgba(255, 215, 0, 0.3) 0%, transparent 70%)' }}
-                    />
-
-                    <div
-                        className="rounded-3xl p-6 h-full"
+                        className="rounded-2xl p-5 h-full"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, transparent 100%)',
-                            border: '1px solid rgba(255, 215, 0, 0.2)'
+                            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 251, 235, 0.8) 100%)',
+                            border: '1px solid rgba(245, 158, 11, 0.2)',
+                            boxShadow: '0 4px 20px rgba(245, 158, 11, 0.08)'
                         }}
                     >
-                        {/* Header */}
-                        <div className="flex items-center gap-4 mb-6">
+                        <div className="flex items-center gap-3 mb-4">
                             <div
-                                className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                                style={{
-                                    background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                                    boxShadow: '0 8px 32px rgba(255, 215, 0, 0.3)'
-                                }}
+                                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
                             >
-                                <Crown className="w-7 h-7 text-black" />
+                                <Star className="w-5 h-5 text-white" />
                             </div>
                             <div className="flex-1">
-                                <h2 className="text-2xl font-black" style={{ color: '#FFD700' }}>YOUR PRODUCT</h2>
-                                <p className="text-sm opacity-50">The champion you're promoting</p>
+                                <h2 className="font-bold text-base" style={{ color: '#b45309' }}>Your Product</h2>
+                                <p className="text-xs text-slate-500">The product you're promoting</p>
                             </div>
-                            {/* Progress Indicator */}
-                            <div
-                                className="px-3 py-1.5 rounded-full text-xs font-bold"
+                            <span
+                                className="text-xs font-semibold px-2 py-1 rounded-full"
                                 style={{
-                                    background: homeProgress === 2 ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                                    color: homeProgress === 2 ? '#FFD700' : 'rgba(255, 255, 255, 0.5)',
-                                    border: `1px solid ${homeProgress === 2 ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)'}`
+                                    background: homeProgress === 2 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(0,0,0,0.05)',
+                                    color: homeProgress === 2 ? '#16a34a' : '#64748b'
                                 }}
                             >
-                                {homeProgress}/2 READY
-                            </div>
+                                {homeProgress}/2
+                            </span>
                         </div>
 
-                        {/* Image Upload Grid */}
-                        <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="grid grid-cols-2 gap-3 mb-4">
                             <ImageUploadCard
                                 label="Front Label"
                                 captured={!!images.homeFront}
@@ -237,185 +191,128 @@ export const MultimodalInput: React.FC<MultimodalInputProps> = ({ onImagesReady,
                             />
                         </div>
 
-                        {/* Context Input */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: 'rgba(255, 215, 0, 0.6)' }}>
-                                <Zap className="w-3 h-3" />
-                                Additional Context
-                            </label>
-                            <textarea
-                                placeholder="e.g. Patented extraction, third-party testing, sourcing details..."
-                                className="w-full h-24 rounded-xl p-4 text-sm placeholder:opacity-30 outline-none transition-all resize-none"
-                                style={{
-                                    background: 'rgba(0, 0, 0, 0.4)',
-                                    border: '1px solid rgba(255, 215, 0, 0.2)'
-                                }}
-                                value={context.homeContext}
-                                onChange={(e) => setContext({ ...context, homeContext: e.target.value })}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* VS Divider */}
-                <div className="flex lg:flex-col items-center justify-center py-4 lg:py-0 lg:px-4">
-                    <div className="hidden lg:block w-px h-16 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-                    <div className="relative">
-                        <div
-                            className="absolute inset-0 blur-xl opacity-50 animate-pulse"
-                            style={{ background: 'linear-gradient(90deg, #FFD700, #22D3EE)' }}
-                        />
-                        <div
-                            className="relative w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center"
+                        <textarea
+                            placeholder="Additional context (optional)..."
+                            className="w-full h-16 rounded-lg p-3 text-sm placeholder:text-slate-400 outline-none resize-none"
                             style={{
-                                background: 'linear-gradient(135deg, #1a1a2e, #0f0f1a)',
-                                border: '2px solid rgba(255, 255, 255, 0.2)',
-                                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)'
+                                background: 'rgba(255, 255, 255, 0.7)',
+                                border: '1px solid rgba(245, 158, 11, 0.15)'
                             }}
-                        >
-                            <span
-                                className="text-2xl lg:text-3xl font-black"
-                                style={{
-                                    background: 'linear-gradient(90deg, #FFD700, #22D3EE)',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent'
-                                }}
-                            >
-                                VS
-                            </span>
-                        </div>
+                            value={context.homeContext}
+                            onChange={(e) => setContext({ ...context, homeContext: e.target.value })}
+                        />
                     </div>
-                    <div className="hidden lg:block w-px h-16 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
                 </div>
 
-                {/* COMPETITOR - Right Side */}
-                <div className="flex-1 relative">
-                    {/* Glow Effect */}
+                {/* VS Badge */}
+                <div className="flex lg:flex-col items-center justify-center py-2 lg:py-0 lg:px-2">
                     <div
-                        className="absolute -inset-4 blur-3xl opacity-30 -z-10"
-                        style={{ background: 'radial-gradient(ellipse at center, rgba(34, 211, 238, 0.3) 0%, transparent 70%)' }}
-                    />
-
-                    <div
-                        className="rounded-3xl p-6 h-full"
+                        className="w-12 h-12 rounded-full flex items-center justify-center font-black text-lg"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.08) 0%, transparent 100%)',
-                            border: '1px solid rgba(34, 211, 238, 0.2)'
+                            background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+                            border: '2px solid #e2e8f0',
+                            color: '#64748b',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
                         }}
                     >
-                        {/* Header */}
-                        <div className="flex items-center gap-4 mb-6">
+                        VS
+                    </div>
+                </div>
+
+                {/* Competitor */}
+                <div className="flex-1">
+                    <div
+                        className="rounded-2xl p-5 h-full"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)',
+                            border: '1px solid rgba(148, 163, 184, 0.2)',
+                            boxShadow: '0 4px 20px rgba(100, 116, 139, 0.06)'
+                        }}
+                    >
+                        <div className="flex items-center gap-3 mb-4">
                             <div
-                                className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                                style={{
-                                    background: 'linear-gradient(135deg, #22D3EE, #3B82F6)',
-                                    boxShadow: '0 8px 32px rgba(34, 211, 238, 0.3)'
-                                }}
+                                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                style={{ background: 'linear-gradient(135deg, #64748b, #475569)' }}
                             >
-                                <Target className="w-7 h-7 text-black" />
+                                <Users className="w-5 h-5 text-white" />
                             </div>
                             <div className="flex-1">
-                                <h2 className="text-2xl font-black" style={{ color: '#22D3EE' }}>COMPETITOR</h2>
-                                <p className="text-sm opacity-50">The challenger to compare</p>
+                                <h2 className="font-bold text-base" style={{ color: '#475569' }}>Competitor</h2>
+                                <p className="text-xs text-slate-500">The product to compare against</p>
                             </div>
-                            {/* Progress Indicator */}
-                            <div
-                                className="px-3 py-1.5 rounded-full text-xs font-bold"
+                            <span
+                                className="text-xs font-semibold px-2 py-1 rounded-full"
                                 style={{
-                                    background: compProgress === 2 ? 'rgba(34, 211, 238, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                                    color: compProgress === 2 ? '#22D3EE' : 'rgba(255, 255, 255, 0.5)',
-                                    border: `1px solid ${compProgress === 2 ? 'rgba(34, 211, 238, 0.3)' : 'rgba(255, 255, 255, 0.1)'}`
+                                    background: compProgress === 2 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(0,0,0,0.05)',
+                                    color: compProgress === 2 ? '#16a34a' : '#64748b'
                                 }}
                             >
-                                {compProgress}/2 READY
-                            </div>
+                                {compProgress}/2
+                            </span>
                         </div>
 
-                        {/* Image Upload Grid */}
-                        <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="grid grid-cols-2 gap-3 mb-4">
                             <ImageUploadCard
                                 label="Front Label"
                                 captured={!!images.compFront}
                                 onImageCaptured={(val) => setImages({ ...images, compFront: val })}
-                                variant="cyan"
+                                variant="slate"
                             />
                             <ImageUploadCard
                                 label="Nutrition Facts"
                                 captured={!!images.compLabel}
                                 onImageCaptured={(val) => setImages({ ...images, compLabel: val })}
-                                variant="cyan"
+                                variant="slate"
                             />
                         </div>
 
-                        {/* Context Input */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: 'rgba(34, 211, 238, 0.6)' }}>
-                                <Target className="w-3 h-3" />
-                                Comparison Notes
-                            </label>
-                            <textarea
-                                placeholder="e.g. Customer asked about this brand, known quality concerns..."
-                                className="w-full h-24 rounded-xl p-4 text-sm placeholder:opacity-30 outline-none transition-all resize-none"
-                                style={{
-                                    background: 'rgba(0, 0, 0, 0.4)',
-                                    border: '1px solid rgba(34, 211, 238, 0.2)'
-                                }}
-                                value={context.compContext}
-                                onChange={(e) => setContext({ ...context, compContext: e.target.value })}
-                            />
-                        </div>
+                        <textarea
+                            placeholder="Comparison notes (optional)..."
+                            className="w-full h-16 rounded-lg p-3 text-sm placeholder:text-slate-400 outline-none resize-none"
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.7)',
+                                border: '1px solid rgba(148, 163, 184, 0.15)'
+                            }}
+                            value={context.compContext}
+                            onChange={(e) => setContext({ ...context, compContext: e.target.value })}
+                        />
                     </div>
                 </div>
             </div>
 
             {/* Submit Button */}
-            <div className="flex flex-col items-center gap-4 mt-12">
+            <div className="flex flex-col items-center gap-3 mt-8">
                 <button
                     onClick={() => onImagesReady(images, context)}
                     disabled={!isComplete || isProcessing}
-                    className="relative overflow-hidden px-12 py-5 rounded-2xl font-black text-lg transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="px-8 py-3.5 rounded-xl font-bold text-base transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{
                         background: isComplete && !isProcessing
-                            ? 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)'
-                            : 'rgba(255, 255, 255, 0.05)',
-                        color: isComplete && !isProcessing ? '#000' : 'rgba(255, 255, 255, 0.3)',
-                        boxShadow: isComplete && !isProcessing ? '0 8px 32px rgba(255, 215, 0, 0.3)' : 'none',
-                        transform: isComplete && !isProcessing ? 'scale(1)' : 'scale(1)',
-                    }}
-                    onMouseEnter={(e) => {
-                        if (isComplete && !isProcessing) {
-                            e.currentTarget.style.transform = 'scale(1.05)';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
+                            ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+                            : '#e2e8f0',
+                        color: isComplete && !isProcessing ? '#fff' : '#94a3b8',
+                        boxShadow: isComplete && !isProcessing ? '0 4px 16px rgba(245, 158, 11, 0.3)' : 'none',
                     }}
                 >
-                    <span className="relative flex items-center gap-3">
+                    <span className="flex items-center gap-2">
                         {isProcessing ? (
                             <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                Analyzing Clinical Data...
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Analyzing...
                             </>
                         ) : (
                             <>
-                                <Sparkles className="w-5 h-5" />
-                                RUN EXPERT ANALYSIS
+                                <Sparkles className="w-4 h-4" />
+                                Run Analysis
                             </>
                         )}
                     </span>
                 </button>
 
                 {!isComplete && (
-                    <div className="flex items-center gap-6 text-sm opacity-50">
-                        <span style={{ color: homeProgress === 2 ? '#FFD700' : undefined }}>
-                            Your Product: {homeProgress}/2
-                        </span>
-                        <span className="w-1 h-1 rounded-full bg-white/30" />
-                        <span style={{ color: compProgress === 2 ? '#22D3EE' : undefined }}>
-                            Competitor: {compProgress}/2
-                        </span>
-                    </div>
+                    <p className="text-xs text-slate-400">
+                        Upload all 4 images to continue
+                    </p>
                 )}
             </div>
         </div>

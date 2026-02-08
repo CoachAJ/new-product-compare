@@ -51,27 +51,41 @@ export const LandingPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-brand-dark text-white selection:bg-brand-gold selection:text-black">
-            <header className="fixed top-0 inset-x-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/5 py-4">
+        <div className="min-h-screen text-slate-800 selection:bg-amber-200 selection:text-amber-900">
+            <header
+                className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl py-3"
+                style={{
+                    background: 'rgba(255, 255, 255, 0.85)',
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.06)'
+                }}
+            >
                 <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
                     <div className="flex items-center gap-3 group cursor-default">
-                        <div className="w-10 h-10 rounded-xl bg-brand-gold flex items-center justify-center rotate-3 group-hover:rotate-0 transition-all duration-500 shadow-[0_0_20px_rgba(255,215,0,0.3)]">
-                            <Zap className="text-black w-6 h-6" fill="black" />
+                        <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
+                            style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
+                        >
+                            <Zap className="text-white w-5 h-5" />
                         </div>
-                        <h1 className="font-black text-2xl tracking-tighter uppercase gold-text-glow">HealthCompare AI</h1>
+                        <h1 className="font-bold text-xl tracking-tight" style={{ color: '#1e293b' }}>
+                            HealthCompare <span style={{ color: '#b45309' }}>AI</span>
+                        </h1>
                     </div>
                     {profile && (
-                        <div className="flex items-center gap-6">
-                            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-gold/10 border border-brand-gold/20">
-                                <ShieldCheck className="w-4 h-4 text-brand-gold" />
-                                <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.2em]">Coach: {profile.name}</span>
+                        <div className="flex items-center gap-4">
+                            <div
+                                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full"
+                                style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}
+                            >
+                                <ShieldCheck className="w-4 h-4" style={{ color: '#b45309' }} />
+                                <span className="text-xs font-semibold" style={{ color: '#b45309' }}>Coach: {profile.name}</span>
                             </div>
                             <button
                                 onClick={handleLogout}
-                                className="p-2 hover:bg-white/10 rounded-xl transition-all group"
-                                title="Lock Profile"
+                                className="p-2 hover:bg-slate-100 rounded-lg transition-all"
+                                title="Logout"
                             >
-                                <LogOut className="w-5 h-5 opacity-40 group-hover:opacity-100 group-hover:text-red-400 transition-all" />
+                                <LogOut className="w-4 h-4 text-slate-400 hover:text-red-500 transition-colors" />
                             </button>
                         </div>
                     )}
