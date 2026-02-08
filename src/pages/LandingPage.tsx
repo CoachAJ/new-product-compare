@@ -8,7 +8,7 @@ import type { AnalysisResult } from '../services/GeminiService';
 import { ScoreCard } from '../components/ScoreCard';
 import { MarketingDashboard } from '../components/MarketingDashboard';
 import { VisualAssetGenerator } from '../components/VisualAssetGenerator';
-import { ShieldCheck, Zap, LogOut } from 'lucide-react';
+import { Zap, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const LandingPage: React.FC = () => {
@@ -51,41 +51,35 @@ export const LandingPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen text-slate-800 selection:bg-amber-200 selection:text-amber-900">
+        <div className="min-h-screen text-slate-800" style={{ background: '#f8fafc' }}>
             <header
-                className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl py-3"
+                className="fixed top-0 inset-x-0 z-50 py-4"
                 style={{
-                    background: 'rgba(255, 255, 255, 0.85)',
-                    borderBottom: '1px solid rgba(0, 0, 0, 0.06)'
+                    background: '#fff',
+                    borderBottom: '1px solid #f1f5f9'
                 }}
             >
-                <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-                    <div className="flex items-center gap-3 group cursor-default">
+                <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
                         <div
-                            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
-                            style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style={{ background: '#0f172a' }}
                         >
-                            <Zap className="text-white w-5 h-5" />
+                            <Zap className="text-white w-4 h-4" />
                         </div>
-                        <h1 className="font-bold text-xl tracking-tight" style={{ color: '#1e293b' }}>
-                            HealthCompare <span style={{ color: '#b45309' }}>AI</span>
-                        </h1>
+                        <span className="font-semibold text-lg text-slate-800">
+                            HealthCompare<span style={{ color: '#0f172a' }}>AI</span>
+                        </span>
                     </div>
                     {profile && (
-                        <div className="flex items-center gap-4">
-                            <div
-                                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full"
-                                style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}
-                            >
-                                <ShieldCheck className="w-4 h-4" style={{ color: '#b45309' }} />
-                                <span className="text-xs font-semibold" style={{ color: '#b45309' }}>Coach: {profile.name}</span>
-                            </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm text-slate-500">{profile.name}</span>
                             <button
                                 onClick={handleLogout}
                                 className="p-2 hover:bg-slate-100 rounded-lg transition-all"
                                 title="Logout"
                             >
-                                <LogOut className="w-4 h-4 text-slate-400 hover:text-red-500 transition-colors" />
+                                <LogOut className="w-4 h-4 text-slate-400" />
                             </button>
                         </div>
                     )}
