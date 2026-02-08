@@ -21,11 +21,14 @@ export const LandingPage: React.FC = () => {
         setProfile(newProfile);
     };
 
-    const handleRunAnalysis = async (images: any) => {
+    const handleRunAnalysis = async (
+        images: { homeFront: string; homeLabel: string; compFront: string; compLabel: string },
+        context: { homeContext: string; compContext: string }
+    ) => {
         if (!profile) return;
         setIsProcessing(true);
         try {
-            const result = await GeminiService.analyzeProducts(profile.apiKey, profile, images);
+            const result = await GeminiService.analyzeProducts(profile.apiKey, profile, images, context);
             setAnalysis(result);
             // Scroll to results
             setTimeout(() => {
@@ -49,30 +52,31 @@ export const LandingPage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-brand-dark text-white selection:bg-brand-gold selection:text-black">
-            {/* Header */}
-            <nav className="border-b border-white/5 bg-black/20 backdrop-blur-md sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-brand-gold flex items-center justify-center">
-                            <Zap className="text-black w-5 h-5" fill="black" />
+            <header className="fixed top-0 inset-x-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/5 py-4">
+                <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+                    <div className="flex items-center gap-3 group cursor-default">
+                        <div className="w-10 h-10 rounded-xl bg-brand-gold flex items-center justify-center rotate-3 group-hover:rotate-0 transition-all duration-500 shadow-[0_0_20px_rgba(255,215,0,0.3)]">
+                            <Zap className="text-black w-6 h-6" fill="black" />
                         </div>
-                        <span className="font-extrabold text-xl tracking-tight uppercase">
-                            HealthCompare <span className="text-brand-gold">AI</span>
-                        </span>
+                        <h1 className="font-black text-2xl tracking-tighter uppercase gold-text-glow">HealthCompare AI</h1>
                     </div>
                     {profile && (
-                        <div className="flex items-center gap-4">
-                            <span className="text-xs opacity-50 hidden sm:inline">Coach: {profile.name}</span>
+                        <div className="flex items-center gap-6">
+                            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-gold/10 border border-brand-gold/20">
+                                <ShieldCheck className="w-4 h-4 text-brand-gold" />
+                                <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.2em]">Coach: {profile.name}</span>
+                            </div>
                             <button
                                 onClick={handleLogout}
-                                className="p-2 hover:bg-white/5 rounded-full transition-colors text-red-500"
+                                className="p-2 hover:bg-white/10 rounded-xl transition-all group"
+                                title="Lock Profile"
                             >
-                                <LogOut className="w-5 h-5" />
+                                <LogOut className="w-5 h-5 opacity-40 group-hover:opacity-100 group-hover:text-red-400 transition-all" />
                             </button>
                         </div>
                     )}
                 </div>
-            </nav>
+            </header>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
                 {!profile ? (
@@ -116,18 +120,35 @@ export const LandingPage: React.FC = () => {
                                     id="results-section"
                                     initial={{ opacity: 0, y: 40 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="space-y-16 py-12 border-t border-white/5"
+                                    className="space-y-20 py-20 border-t border-white/5"
                                 >
-                                    <div className="text-center space-y-2">
-                                        <span className="text-brand-gold font-bold tracking-widest text-xs uppercase">Analysis Complete</span>
-                                        <h2 className="text-3xl font-black uppercase">The Verdict is In</h2>
+                                    <div className="text-center space-y-3">
+                                        <span className="text-brand-gold font-black tracking-widest text-[#FFD700] text-[10px] uppercase bg-brand-gold/10 px-4 py-1.5 rounded-full border border-brand-gold/20">Analysis Complete</span>
+                                        <h2 className="text-4xl font-black uppercase tracking-tighter gold-text-glow">The Clinical Verdict</h2>
                                     </div>
 
-                                    <ScoreCard analysis={analysis} />
+                                    <div className="space-y-24">
+                                        <section>
+                                            <ScoreCard analysis={analysis} />
+                                        </section>
 
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                                        <MarketingDashboard analysis={analysis} />
-                                        <VisualAssetGenerator analysis={analysis} profile={profile} />
+                                        <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                                            <div className="glass-card p-1 bg-gradient-to-br from-brand-gold/10 to-transparent">
+                                                <div className="bg-[#080808] rounded-[1.4rem] p-8">
+                                                    <MarketingDashboard analysis={analysis} />
+                                                </div>
+                                            </div>
+                                            <VisualAssetGenerator analysis={analysis} profile={profile} />
+                                        </section>
+                                    </div>
+
+                                    <div className="text-center pt-20">
+                                        <button
+                                            onClick={() => setAnalysis(null)}
+                                            className="text-[10px] opacity-30 hover:opacity-100 transition-opacity uppercase tracking-[0.3em] font-black border-b border-transparent hover:border-brand-gold/30 pb-1"
+                                        >
+                                            ← Execute new clinical assessment
+                                        </button>
                                     </div>
                                 </motion.div>
                             )}

@@ -11,10 +11,10 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({ analysis }) => {
     return (
         <div className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="glass-card p-6 h-[400px]">
-                    <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                        <Trophy className="text-brand-gold" />
-                        Quality Metric Comparison
+                <div className="glass-card p-8 h-[450px]">
+                    <h3 className="text-xl font-black mb-8 flex items-center gap-3 gold-text-glow uppercase tracking-tighter">
+                        <Trophy className="text-brand-gold w-6 h-6" />
+                        Clinical Metric Comparison
                     </h3>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart
@@ -45,13 +45,15 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({ analysis }) => {
                     </ResponsiveContainer>
                 </div>
 
-                <div className="glass-card p-6 flex flex-col justify-center">
-                    <div className="mb-6 p-4 rounded-xl bg-brand-gold/10 border border-brand-gold/20">
-                        <h3 className="text-brand-gold font-black text-2xl mb-2 flex items-center gap-2">
-                            <Trophy />
-                            WINNER: {analysis.winner === 'home' ? 'HOME PRODUCT' : 'COMPETITOR'}
+                <div className="glass-card p-8 flex flex-col justify-center relative overflow-hidden group">
+                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-gold/5 blur-3xl rounded-full group-hover:bg-brand-gold/10 transition-all duration-700" />
+
+                    <div className="mb-8 p-6 rounded-2xl bg-brand-gold/5 border border-brand-gold/20 gold-aura relative">
+                        <h3 className="text-brand-gold font-black text-3xl mb-3 flex items-center gap-3 tracking-tighter uppercase gold-text-glow">
+                            <Trophy className="w-8 h-8" />
+                            {analysis.winner === 'home' ? 'HOME PRODUCT WINS' : 'COMPETITOR WINS'}
                         </h3>
-                        <p className="text-sm opacity-80 leading-relaxed italic">
+                        <p className="text-sm opacity-90 leading-relaxed italic font-medium">
                             "{analysis.verdict}"
                         </p>
                     </div>

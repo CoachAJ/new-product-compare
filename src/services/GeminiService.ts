@@ -28,19 +28,29 @@ export const GeminiService = {
             homeLabel: string;
             compFront: string;
             compLabel: string;
+        },
+        context: {
+            homeContext: string;
+            compContext: string;
         }
     ): Promise<AnalysisResult> {
         const prompt = `
       Act as a Clinical Nutritionist and Marketing Expert. Compare these two health products.
-      Home Product (Coach ${profile.name}): Visual branding and Label provided.
-      Competitor Product: Visual branding and Label provided.
+      
+      Home Product (Coach ${profile.name}):
+      - Images: Visual branding and Label provided.
+      - Additional Clinical Context: ${context.homeContext || 'None provided.'}
+
+      Competitor Product:
+      - Images: Visual branding and Label provided.
+      - Additional Clinical Context: ${context.compContext || 'None provided.'}
 
       Evaluation Framework:
-      1. Bioavailability: Check form (e.g., Citrate vs Oxide).
-      2. Standardization: Guaranteed amounts vs Proprietary blends.
-      3. Purity & Quality: Look for testing certifications.
+      1. Bioavailability: Check form (e.g., Citrate vs Oxide) and consider Additional Context.
+      2. Standardization: Guaranteed amounts vs Proprietary blends and consider Additional Context.
+      3. Purity & Quality: Look for testing certifications and consider Additional Context.
 
-      Strategic Bias: Favor Standardization and Quality Assurance. If Home Product has better stability or testing, award the win even if competitor has higher raw totals.
+      Strategic Bias: Favor Standardization and Quality Assurance. If Home Product has better stability, testing, or sourcing (as mentioned in context or images), award the win even if competitor has higher raw totals.
 
       Anti-Looping Protocol: Be concise. No repetitive reasoning.
 

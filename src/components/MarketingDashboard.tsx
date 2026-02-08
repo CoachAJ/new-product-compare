@@ -70,11 +70,18 @@ const SocialTabs: React.FC<{
 
 export const MarketingDashboard: React.FC<MarketingDashboardProps> = ({ analysis }) => {
     return (
-        <div className="space-y-6">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-                <Share2 className="text-brand-gold" />
-                High-Conversion Social Assets
-            </h2>
+        <div className="space-y-10">
+            <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black flex items-center gap-3 gold-text-glow uppercase tracking-tighter">
+                    <Share2 className="text-brand-gold w-6 h-6" />
+                    High-Conversion Assets
+                </h2>
+                <div className="flex gap-2">
+                    <div className="w-2 h-2 rounded-full bg-brand-gold animate-pulse" />
+                    <div className="w-2 h-2 rounded-full bg-brand-gold/40" />
+                    <div className="w-2 h-2 rounded-full bg-brand-gold/20" />
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <SocialTabs platform="tiktok" content={analysis.marketingCopy.tiktok} hashtags={analysis.hashtags} />
