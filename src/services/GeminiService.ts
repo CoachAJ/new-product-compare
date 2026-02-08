@@ -19,6 +19,17 @@ export interface AnalysisResult {
         reasoning: string;
     }[];
     verdict: string;
+    summary: string;
+    pros: string[];
+    cons: string[];
+    scoreHome: number;
+    scoreCompetitor: number;
+    nutrientComparison: {
+        nutrient: string;
+        homeValue: string;
+        competitorValue: string;
+        advantage: 'home' | 'competitor' | 'neutral';
+    }[];
     marketingCopy: {
         tiktok: string;
         linkedin: string;
@@ -54,7 +65,7 @@ export const GeminiService = {
         const parts: any[] = [];
 
         const systemInstruction = `You are a world-class Nutritional Science Expert.
-Compare the "Home Product" vs "Competitor Product" based on the provided label images.
+Compare "Home Product" vs "Competitor Product" based on the label images.
 
 CRITICAL RULES:
 - DO NOT REPEAT phrases like "intent context favored by...". This is a bug you must avoid.
@@ -68,19 +79,16 @@ Evaluation Framework:
 2. Standardization: Guaranteed amounts vs Proprietary blends and consider Additional Context.
 3. Purity & Quality: Look for testing certifications and consider Additional Context.
 
-Strategic Bias: Favor Standardization and Quality Assurance. If Home Product has better stability, testing, or sourcing (as mentioned in context or images), award the win even if competitor has higher raw totals.
-
 Return valid JSON.`;
 
-        // Build image parts
-        const imageTargets = [
-            { img: images.homeFront, label: "Home Product Front" },
+        // KEY OPTIMIZATION: Only send the LABEL images (2 total) to reduce token usage
+        // This is what makes the analysis work without hitting token limits
+        const targets = [
             { img: images.homeLabel, label: "Home Product Label" },
-            { img: images.compFront, label: "Competitor Front" },
-            { img: images.compLabel, label: "Competitor Label" }
+            { img: images.compLabel, label: "Competitor Product Label" }
         ];
 
-        for (const item of imageTargets) {
+        for (const item of targets) {
             if (item.img) {
                 const data = cleanBase64(item.img);
                 if (data) {
@@ -96,7 +104,7 @@ Return valid JSON.`;
         }
 
         parts.push({
-            text: `Compare these products. Home Context: ${context.homeContext || "High quality product"}. Competitor Context: ${context.compContext || "N/A"}.`
+            text: `Compare these products. Home: ${context.homeContext || "High quality product"}. Competitor: ${context.compContext || "N/A"}.`
         });
 
         const response = await ai.models.generateContent({
@@ -110,6 +118,11 @@ Return valid JSON.`;
                     properties: {
                         winner: { type: Type.STRING },
                         verdict: { type: Type.STRING },
+                        summary: { type: Type.STRING },
+                        pros: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        cons: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        scoreHome: { type: Type.NUMBER },
+                        scoreCompetitor: { type: Type.NUMBER },
                         scores: {
                             type: Type.ARRAY,
                             items: {
@@ -121,6 +134,18 @@ Return valid JSON.`;
                                     reasoning: { type: Type.STRING }
                                 },
                                 required: ["category", "home", "competitor", "reasoning"]
+                            }
+                        },
+                        nutrientComparison: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    nutrient: { type: Type.STRING },
+                                    homeValue: { type: Type.STRING },
+                                    competitorValue: { type: Type.STRING },
+                                    advantage: { type: Type.STRING, enum: ["home", "competitor", "neutral"] }
+                                }
                             }
                         },
                         marketingCopy: {
@@ -137,7 +162,7 @@ Return valid JSON.`;
                             items: { type: Type.STRING }
                         }
                     },
-                    required: ["winner", "verdict", "scores", "marketingCopy", "hashtags"]
+                    required: ["winner", "verdict", "summary", "pros", "cons", "scoreHome", "scoreCompetitor", "scores", "nutrientComparison", "marketingCopy", "hashtags"]
                 }
             }
         });

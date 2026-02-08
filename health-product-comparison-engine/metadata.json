@@ -1,0 +1,7 @@
+{
+  "name": "Health Product Comparison Engine",
+  "description": "A professional tool for Health Coaches to generate honest, science-backed product comparisons and personalized marketing assets comparing home products against competitors.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
