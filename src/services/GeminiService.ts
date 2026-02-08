@@ -1,6 +1,14 @@
+import { GoogleGenAI, Type } from "@google/genai";
 import type { CoachProfile } from '../utils/ProfileManager';
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
+/**
+ * Robustly strips any data URI prefix and returns only the raw base64 string.
+ */
+const cleanBase64 = (data: string): string | null => {
+    if (!data) return null;
+    const parts = data.split(',');
+    return parts.length > 1 ? parts[1].trim() : parts[0].trim();
+};
 
 export interface AnalysisResult {
     winner: 'home' | 'competitor' | 'tie';
@@ -19,6 +27,14 @@ export interface AnalysisResult {
     hashtags: string[];
 }
 
+const getAIClient = (apiKey: string) => {
+    const key = apiKey?.trim();
+    if (!key) {
+        throw new Error("API Key is missing. Please add your Google Gemini API Key in the Profile settings.");
+    }
+    return new GoogleGenAI({ apiKey: key });
+};
+
 export const GeminiService = {
     async analyzeProducts(
         apiKey: string,
@@ -34,66 +50,102 @@ export const GeminiService = {
             compContext: string;
         }
     ): Promise<AnalysisResult> {
-        const prompt = `
-      Act as a Clinical Nutritionist and Marketing Expert. Compare these two health products.
-      
-      Home Product (Coach ${profile.name}):
-      - Images: Visual branding and Label provided.
-      - Additional Clinical Context: ${context.homeContext || 'None provided.'}
+        const ai = getAIClient(apiKey);
+        const parts: any[] = [];
 
-      Competitor Product:
-      - Images: Visual branding and Label provided.
-      - Additional Clinical Context: ${context.compContext || 'None provided.'}
+        const systemInstruction = `You are a world-class Nutritional Science Expert.
+Compare the "Home Product" vs "Competitor Product" based on the provided label images.
 
-      Evaluation Framework:
-      1. Bioavailability: Check form (e.g., Citrate vs Oxide) and consider Additional Context.
-      2. Standardization: Guaranteed amounts vs Proprietary blends and consider Additional Context.
-      3. Purity & Quality: Look for testing certifications and consider Additional Context.
+CRITICAL RULES:
+- DO NOT REPEAT phrases like "intent context favored by...". This is a bug you must avoid.
+- PROVIDE DATA: Focus on specific mg/mcg values, bioavailability (citrate vs oxide), and non-GMO/Organic status.
+- HONESTY: Acknowledge if the competitor is cheaper or has a higher dose of one specific thing, but explain why Home quality is superior overall.
+- FORMAT: Always end every social post with exactly 5 relevant health hashtags.
+- Personalize with Name: ${profile.name} and Link: ${profile.evaluationLink}.
 
-      Strategic Bias: Favor Standardization and Quality Assurance. If Home Product has better stability, testing, or sourcing (as mentioned in context or images), award the win even if competitor has higher raw totals.
+Evaluation Framework:
+1. Bioavailability: Check form (e.g., Citrate vs Oxide) and consider Additional Context.
+2. Standardization: Guaranteed amounts vs Proprietary blends and consider Additional Context.
+3. Purity & Quality: Look for testing certifications and consider Additional Context.
 
-      Anti-Looping Protocol: Be concise. No repetitive reasoning.
+Strategic Bias: Favor Standardization and Quality Assurance. If Home Product has better stability, testing, or sourcing (as mentioned in context or images), award the win even if competitor has higher raw totals.
 
-      Output Format (JSON strictly):
-      {
-        "winner": "home" | "competitor",
-        "scores": [
-          {"category": "Bioavailability", "home": 0-100, "competitor": 0-100, "reasoning": "..."},
-          {"category": "Standardization", "home": 0-100, "competitor": 0-100, "reasoning": "..."},
-          {"category": "Purity", "home": 0-100, "competitor": 0-100, "reasoning": "..."}
-        ],
-        "verdict": "Clear concise explanation of why the winner was chosen.",
-        "marketingCopy": {
-          "tiktok": "Short hook-heavy copy targeting Coach personalized link: ${profile.evaluationLink}",
-          "linkedin": "Professional science-first breakdown targeting Coach personalized link: ${profile.evaluationLink}",
-          "facebook": "Community focused, emoji rich targeting Coach personalized link: ${profile.evaluationLink}"
-        },
-        "hashtags": ["list EXACTLY 5 trending hashtags"]
-      }
-    `;
+Return valid JSON.`;
 
-        const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: prompt },
-                        { inline_data: { mime_type: "image/jpeg", data: images.homeFront.split(',')[1] } },
-                        { inline_data: { mime_type: "image/jpeg", data: images.homeLabel.split(',')[1] } },
-                        { inline_data: { mime_type: "image/jpeg", data: images.compFront.split(',')[1] } },
-                        { inline_data: { mime_type: "image/jpeg", data: images.compLabel.split(',')[1] } }
-                    ]
-                }],
-                generationConfig: {
-                    response_mime_type: "application/json"
+        // Build image parts
+        const imageTargets = [
+            { img: images.homeFront, label: "Home Product Front" },
+            { img: images.homeLabel, label: "Home Product Label" },
+            { img: images.compFront, label: "Competitor Front" },
+            { img: images.compLabel, label: "Competitor Label" }
+        ];
+
+        for (const item of imageTargets) {
+            if (item.img) {
+                const data = cleanBase64(item.img);
+                if (data) {
+                    parts.push({
+                        inlineData: {
+                            data,
+                            mimeType: "image/jpeg"
+                        }
+                    });
+                    parts.push({ text: item.label });
                 }
-            })
+            }
+        }
+
+        parts.push({
+            text: `Compare these products. Home Context: ${context.homeContext || "High quality product"}. Competitor Context: ${context.compContext || "N/A"}.`
         });
 
-        if (!response.ok) throw new Error('Gemini Analysis Failed');
-        const result = await response.json();
-        return JSON.parse(result.candidates[0].content.parts[0].text);
+        const response = await ai.models.generateContent({
+            model: "gemini-2.0-flash",
+            contents: { parts },
+            config: {
+                systemInstruction: systemInstruction,
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        winner: { type: Type.STRING },
+                        verdict: { type: Type.STRING },
+                        scores: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    category: { type: Type.STRING },
+                                    home: { type: Type.NUMBER },
+                                    competitor: { type: Type.NUMBER },
+                                    reasoning: { type: Type.STRING }
+                                },
+                                required: ["category", "home", "competitor", "reasoning"]
+                            }
+                        },
+                        marketingCopy: {
+                            type: Type.OBJECT,
+                            properties: {
+                                facebook: { type: Type.STRING },
+                                linkedin: { type: Type.STRING },
+                                tiktok: { type: Type.STRING }
+                            },
+                            required: ["facebook", "linkedin", "tiktok"]
+                        },
+                        hashtags: {
+                            type: Type.ARRAY,
+                            items: { type: Type.STRING }
+                        }
+                    },
+                    required: ["winner", "verdict", "scores", "marketingCopy", "hashtags"]
+                }
+            }
+        });
+
+        if (response.text) {
+            return JSON.parse(response.text) as AnalysisResult;
+        }
+        throw new Error("Analysis failed. Try with clearer label images.");
     },
 
     async generateImagePrompt(analysis: AnalysisResult, profile: CoachProfile): Promise<string> {
