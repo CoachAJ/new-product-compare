@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Camera, Upload, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Camera, Upload, CheckCircle2, Loader2 } from 'lucide-react';
 import { MimeGuard } from '../utils/MimeGuard';
 
 interface ImageInputProps {

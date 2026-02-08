@@ -1,4 +1,4 @@
-import { CoachProfile } from '../utils/ProfileManager';
+import type { CoachProfile } from '../utils/ProfileManager';
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
 
