@@ -78,7 +78,7 @@ export const LandingPage: React.FC = () => {
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+            <main className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 {!profile ? (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -87,7 +87,7 @@ export const LandingPage: React.FC = () => {
                         <div className="text-center mb-12">
                             <h1 className="text-4xl sm:text-6xl font-black mb-4 tracking-tighter">
                                 TRANSFORM LABELS INTO <br />
-                                <span className="text-brand-gold">CONVERSION ASSETS</span>
+                                <span className="text-brand-gold gold-text-glow">CONVERSION ASSETS</span>
                             </h1>
                             <p className="text-lg opacity-60 max-w-2xl mx-auto">
                                 The specialized "Tale of the Tape" comparison engine for Health Coaches.
@@ -101,17 +101,8 @@ export const LandingPage: React.FC = () => {
                         <motion.section
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="space-y-8"
                         >
-                            <div className="flex flex-col items-center">
-                                <div className="flex items-center gap-4 mb-8 text-xs font-bold uppercase tracking-widest opacity-40">
-                                    <ShieldCheck className="w-4 h-4" />
-                                    MIME-GUARD PROTECTED
-                                    <span className="h-px w-8 bg-white/20" />
-                                    GEMINI 3 PRO PREVIEW
-                                </div>
-                                <MultimodalInput onImagesReady={handleRunAnalysis} isProcessing={isProcessing} />
-                            </div>
+                            <MultimodalInput onImagesReady={handleRunAnalysis} isProcessing={isProcessing} />
                         </motion.section>
 
                         <AnimatePresence>
