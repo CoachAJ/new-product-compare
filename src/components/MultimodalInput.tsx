@@ -46,20 +46,16 @@ const resizeImage = (base64Str: string, maxWidth = 800): Promise<string> => {
 
 interface ImageUploadBoxProps {
     label: string;
-    subLabel?: string;
     image: string | null;
     onImageChange: (img: string | null) => void;
-    icon: React.ReactNode;
-    colorClass: 'teal' | 'rose';
+    accentColor: string;
 }
 
 const ImageUploadBox: React.FC<ImageUploadBoxProps> = ({
     label,
-    subLabel,
     image,
     onImageChange,
-    icon,
-    colorClass
+    accentColor
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isFocused, setIsFocused] = useState(false);
@@ -106,15 +102,21 @@ const ImageUploadBox: React.FC<ImageUploadBoxProps> = ({
         }
     };
 
-    const bgColor = colorClass === 'teal' ? 'bg-teal-50' : 'bg-rose-50';
-    const ringColor = colorClass === 'teal' ? 'ring-teal-100' : 'ring-rose-100';
-    const borderColor = colorClass === 'teal' ? 'border-teal-500' : 'border-rose-500';
-    const iconBg = colorClass === 'teal' ? 'bg-teal-100 text-teal-600' : 'bg-rose-100 text-rose-600';
-
     return (
-        <div className="flex-1 min-w-[140px]">
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-                {icon} {label}
+        <div style={{ flex: 1, minWidth: '140px' }}>
+            <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '8px'
+            }}>
+                {label === 'Product Shot' ? <ImageIcon style={{ width: 12, height: 12 }} /> : <FileText style={{ width: 12, height: 12 }} />}
+                {label}
             </label>
             <div
                 tabIndex={0}
@@ -122,33 +124,69 @@ const ImageUploadBox: React.FC<ImageUploadBoxProps> = ({
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 onClick={() => fileInputRef.current?.click()}
-                className={`
-                    cursor-pointer h-40 border-2 border-dashed rounded-xl flex flex-col items-center justify-center 
-                    transition-all relative overflow-hidden outline-none group
-                    ${isFocused ? `${borderColor} ring-4 ${ringColor} ${bgColor}` : 'border-slate-300 bg-white hover:bg-slate-50'}
-                `}
+                style={{
+                    cursor: 'pointer',
+                    height: '160px',
+                    border: isFocused ? `2px solid ${accentColor}` : '2px dashed #cbd5e1',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: isFocused ? `${accentColor}10` : '#fff',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
+                }}
             >
                 {image ? (
                     <>
-                        <img src={image} alt="Uploaded" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button
-                                onClick={(e) => { e.stopPropagation(); onImageChange(null); }}
-                                className="bg-white/90 p-2 rounded-full text-slate-900 hover:bg-white transition-colors shadow-lg"
-                            >
-                                <X className="w-5 h-5" />
+                        <img src={image} alt="Uploaded" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div
+                            onClick={(e) => { e.stopPropagation(); onImageChange(null); }}
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                background: 'rgba(0,0,0,0.4)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                opacity: 0,
+                                transition: 'opacity 0.2s'
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                            onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}
+                        >
+                            <button style={{
+                                background: 'rgba(255,255,255,0.9)',
+                                padding: '8px',
+                                borderRadius: '50%',
+                                border: 'none',
+                                cursor: 'pointer'
+                            }}>
+                                <X style={{ width: 20, height: 20, color: '#1e293b' }} />
                             </button>
                         </div>
                     </>
                 ) : (
-                    <div className="text-center p-4">
-                        <div className={`mx-auto w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${isFocused ? iconBg : 'bg-slate-100 text-slate-400'}`}>
-                            {isFocused ? <Clipboard className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+                    <div style={{ textAlign: 'center', padding: '16px' }}>
+                        <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 8px',
+                            background: isFocused ? `${accentColor}20` : '#f1f5f9',
+                            color: isFocused ? accentColor : '#94a3b8'
+                        }}>
+                            {isFocused ? <Clipboard style={{ width: 20, height: 20 }} /> : <Upload style={{ width: 20, height: 20 }} />}
                         </div>
-                        <p className="text-xs font-medium text-slate-600">
+                        <p style={{ fontSize: '12px', fontWeight: 500, color: '#475569' }}>
                             {isFocused ? 'Paste Image' : 'Click or Paste'}
                         </p>
-                        {subLabel && <p className="text-[10px] text-slate-400 mt-1">{subLabel}</p>}
                     </div>
                 )}
                 <input
@@ -156,7 +194,7 @@ const ImageUploadBox: React.FC<ImageUploadBoxProps> = ({
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
-                    className="hidden"
+                    style={{ display: 'none' }}
                 />
             </div>
         </div>
@@ -203,121 +241,216 @@ export const MultimodalInput: React.FC<MultimodalInputProps> = ({ onImagesReady,
         );
     };
 
+    const inputStyle: React.CSSProperties = {
+        width: '100%',
+        padding: '10px 16px',
+        borderRadius: '8px',
+        border: '1px solid #e2e8f0',
+        outline: 'none',
+        fontSize: '14px'
+    };
+
+    const textareaStyle: React.CSSProperties = {
+        ...inputStyle,
+        height: '80px',
+        resize: 'none'
+    };
+
     return (
-        <div className="space-y-8">
-            <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold text-slate-900">Health Product Analysis</h2>
-                <p className="text-slate-500">Paste images of your product labels for an expert breakdown.</p>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 16px' }}>
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
+                    Health Product Analysis
+                </h2>
+                <p style={{ color: '#64748b', fontSize: '16px' }}>
+                    Paste images of your product labels for an expert breakdown.
+                </p>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-8">
+            {/* Cards Grid - Side by Side */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+                gap: '24px',
+                marginBottom: '32px'
+            }}>
                 {/* Your Product Card */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-teal-500" />
-                    <div className="flex items-center gap-2 mb-6">
-                        <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center text-teal-600">
-                            <Package className="w-5 h-5" />
+                <div style={{
+                    background: '#ffffff',
+                    borderRadius: '16px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    border: '1px solid #e2e8f0',
+                    overflow: 'hidden'
+                }}>
+                    {/* Teal Top Border */}
+                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #0d9488, #14b8a6)' }} />
+
+                    <div style={{ padding: '24px' }}>
+                        {/* Card Header */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                            <div style={{
+                                width: '40px',
+                                height: '40px',
+                                background: '#ccfbf1',
+                                borderRadius: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <Package style={{ width: 22, height: 22, color: '#0d9488' }} />
+                            </div>
+                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>Your Product</h3>
                         </div>
-                        <h3 className="font-bold text-lg text-slate-800">Your Product</h3>
-                    </div>
-                    <div className="space-y-5">
+
+                        {/* Product Name Input */}
                         <input
                             type="text"
                             value={homeName}
                             onChange={(e) => setHomeName(e.target.value)}
                             placeholder="Product Name"
-                            className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-teal-500"
+                            style={{ ...inputStyle, marginBottom: '16px' }}
+                            onFocus={(e) => e.target.style.borderColor = '#0d9488'}
+                            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                         />
-                        <div className="flex gap-4">
+
+                        {/* Image Upload Boxes */}
+                        <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
                             <ImageUploadBox
                                 label="Product Shot"
                                 image={homeProductImage}
                                 onImageChange={setHomeProductImage}
-                                icon={<ImageIcon className="w-3 h-3" />}
-                                colorClass="teal"
+                                accentColor="#0d9488"
                             />
                             <ImageUploadBox
                                 label="Ingredients"
                                 image={homeIngredientsImage}
                                 onImageChange={setHomeIngredientsImage}
-                                icon={<FileText className="w-3 h-3" />}
-                                colorClass="teal"
+                                accentColor="#0d9488"
                             />
                         </div>
+
+                        {/* Notes */}
                         <textarea
                             value={homeNotes}
                             onChange={(e) => setHomeNotes(e.target.value)}
                             placeholder="Key Benefits..."
-                            className="w-full px-4 py-2 rounded-lg border border-slate-300 h-24 text-sm resize-none"
+                            style={textareaStyle}
+                            onFocus={(e) => e.target.style.borderColor = '#0d9488'}
+                            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                         />
                     </div>
                 </div>
 
                 {/* Competitor Card */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-rose-500" />
-                    <div className="flex items-center gap-2 mb-6">
-                        <div className="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center text-rose-600">
-                            <Package className="w-5 h-5" />
+                <div style={{
+                    background: '#ffffff',
+                    borderRadius: '16px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    border: '1px solid #e2e8f0',
+                    overflow: 'hidden'
+                }}>
+                    {/* Rose Top Border */}
+                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #e11d48, #f43f5e)' }} />
+
+                    <div style={{ padding: '24px' }}>
+                        {/* Card Header */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                            <div style={{
+                                width: '40px',
+                                height: '40px',
+                                background: '#ffe4e6',
+                                borderRadius: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <Package style={{ width: 22, height: 22, color: '#e11d48' }} />
+                            </div>
+                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>Competitor</h3>
                         </div>
-                        <h3 className="font-bold text-lg text-slate-800">Competitor</h3>
-                    </div>
-                    <div className="space-y-5">
-                        <div className="grid grid-cols-3 gap-4">
+
+                        {/* Name + Price Row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px', marginBottom: '16px' }}>
                             <input
                                 type="text"
                                 value={compName}
                                 onChange={(e) => setCompName(e.target.value)}
                                 placeholder="Competitor Name"
-                                className="col-span-2 w-full px-4 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-rose-500"
+                                style={inputStyle}
+                                onFocus={(e) => e.target.style.borderColor = '#e11d48'}
+                                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                             />
                             <input
                                 type="text"
                                 value={compPrice}
                                 onChange={(e) => setCompPrice(e.target.value)}
                                 placeholder="Price"
-                                className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-rose-500"
+                                style={inputStyle}
+                                onFocus={(e) => e.target.style.borderColor = '#e11d48'}
+                                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                             />
                         </div>
-                        <div className="flex gap-4">
+
+                        {/* Image Upload Boxes */}
+                        <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
                             <ImageUploadBox
                                 label="Product Shot"
                                 image={compProductImage}
                                 onImageChange={setCompProductImage}
-                                icon={<ImageIcon className="w-3 h-3" />}
-                                colorClass="rose"
+                                accentColor="#e11d48"
                             />
                             <ImageUploadBox
                                 label="Ingredients"
                                 image={compIngredientsImage}
                                 onImageChange={setCompIngredientsImage}
-                                icon={<FileText className="w-3 h-3" />}
-                                colorClass="rose"
+                                accentColor="#e11d48"
                             />
                         </div>
+
+                        {/* Notes */}
                         <textarea
                             value={compNotes}
                             onChange={(e) => setCompNotes(e.target.value)}
                             placeholder="Weaknesses..."
-                            className="w-full px-4 py-2 rounded-lg border border-slate-300 h-24 text-sm resize-none"
+                            style={textareaStyle}
+                            onFocus={(e) => e.target.style.borderColor = '#e11d48'}
+                            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="flex justify-center pt-4 pb-12">
+            {/* Compare Button */}
+            <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '48px' }}>
                 <button
                     onClick={handleStart}
                     disabled={isProcessing}
-                    className="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-lg font-bold py-4 px-12 rounded-full shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        background: isProcessing ? '#94a3b8' : 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                        color: '#ffffff',
+                        fontSize: '18px',
+                        fontWeight: 700,
+                        padding: '16px 48px',
+                        borderRadius: '50px',
+                        border: 'none',
+                        cursor: isProcessing ? 'not-allowed' : 'pointer',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                        transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => !isProcessing && (e.currentTarget.style.transform = 'scale(1.05)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
                 >
                     {isProcessing ? (
-                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <Loader2 style={{ width: 24, height: 24, animation: 'spin 1s linear infinite' }} />
                     ) : (
-                        <Sparkles className="w-6 h-6 text-teal-400" />
+                        <Sparkles style={{ width: 24, height: 24, color: '#14b8a6' }} />
                     )}
                     {isProcessing ? 'Analyzing...' : 'Compare & Analyze'}
-                    {!isProcessing && <ArrowRight className="w-5 h-5" />}
+                    {!isProcessing && <ArrowRight style={{ width: 20, height: 20 }} />}
                 </button>
             </div>
         </div>
