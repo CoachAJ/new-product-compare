@@ -1,282 +1,323 @@
-import React, { useRef, useState } from 'react';
-import { Upload, Loader2, Sparkles, Package, Target, Image, FileText, ArrowRight } from 'lucide-react';
-import { MimeGuard } from '../utils/MimeGuard';
-
-interface ImageUploadProps {
-    label: string;
-    onImageCaptured: (dataUrl: string) => void;
-    captured: boolean;
-}
-
-const ImageUploadBox: React.FC<ImageUploadProps> = ({ onImageCaptured, captured }) => {
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [loading, setLoading] = useState(false);
-
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file && MimeGuard.isValidImage(file)) {
-            setLoading(true);
-            const base64 = await MimeGuard.fileToBase64(file);
-            onImageCaptured(base64);
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div
-            onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl cursor-pointer transition-all hover:border-slate-300"
-            style={{
-                border: captured ? '2px solid #10b981' : '2px dashed #e2e8f0',
-                background: captured ? 'rgba(16, 185, 129, 0.05)' : 'transparent',
-                minHeight: '120px'
-            }}
-        >
-            <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-            />
-
-            {loading ? (
-                <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-            ) : (
-                <>
-                    <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center"
-                        style={{ background: captured ? '#10b981' : '#f1f5f9' }}
-                    >
-                        <Upload className={`w-5 h-5 ${captured ? 'text-white' : 'text-slate-400'}`} />
-                    </div>
-                    <span className="text-sm text-slate-500">
-                        {captured ? 'Uploaded ✓' : 'Click or Paste'}
-                    </span>
-                </>
-            )}
-        </div>
-    );
-};
+import React, { useState, useRef } from 'react';
+import { Upload, X, Package, ArrowRight, FileText, Image as ImageIcon, Sparkles, Clipboard, Loader2 } from 'lucide-react';
 
 interface MultimodalInputProps {
     onImagesReady: (
         images: { homeFront: string; homeLabel: string; compFront: string; compLabel: string },
-        context: { homeContext: string; compContext: string }
+        context: { homeContext: string; compContext: string },
+        names: { homeName: string; compName: string; compPrice: string }
     ) => void;
     isProcessing: boolean;
 }
 
-export const MultimodalInput: React.FC<MultimodalInputProps> = ({ onImagesReady, isProcessing }) => {
-    const [images, setImages] = useState({
-        homeFront: '',
-        homeLabel: '',
-        compFront: '',
-        compLabel: '',
-    });
-    const [context, setContext] = useState({
-        homeContext: '',
-        compContext: '',
-    });
-    const [homeName, setHomeName] = useState('');
-    const [compName, setCompName] = useState('');
+/**
+ * Aggressive resize to prevent "Failed to fetch" errors.
+ * Max width 800px, 0.7 quality.
+ */
+const resizeImage = (base64Str: string, maxWidth = 800): Promise<string> => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.src = base64Str;
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
 
-    const isComplete = !!(images.homeFront && images.homeLabel && images.compFront && images.compLabel);
+            if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.7));
+            } else {
+                resolve(base64Str);
+            }
+        };
+        img.onerror = () => resolve(base64Str);
+    });
+};
+
+interface ImageUploadBoxProps {
+    label: string;
+    subLabel?: string;
+    image: string | null;
+    onImageChange: (img: string | null) => void;
+    icon: React.ReactNode;
+    colorClass: 'teal' | 'rose';
+}
+
+const ImageUploadBox: React.FC<ImageUploadBoxProps> = ({
+    label,
+    subLabel,
+    image,
+    onImageChange,
+    icon,
+    colorClass
+}) => {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isFocused, setIsFocused] = useState(false);
+
+    const processAndSetImage = async (data: string) => {
+        if (!data.startsWith('data:image/')) {
+            console.warn("Skipping non-image data");
+            return;
+        }
+        const resized = await resizeImage(data);
+        onImageChange(resized);
+    };
+
+    const handlePaste = (e: React.ClipboardEvent) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf("image") !== -1) {
+                const blob = items[i].getAsFile();
+                if (blob) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        processAndSetImage(event.target?.result as string);
+                    };
+                    reader.readAsDataURL(blob);
+                    e.preventDefault();
+                    break;
+                }
+            }
+        }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                alert("Please select a valid image file.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                processAndSetImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const bgColor = colorClass === 'teal' ? 'bg-teal-50' : 'bg-rose-50';
+    const ringColor = colorClass === 'teal' ? 'ring-teal-100' : 'ring-rose-100';
+    const borderColor = colorClass === 'teal' ? 'border-teal-500' : 'border-rose-500';
+    const iconBg = colorClass === 'teal' ? 'bg-teal-100 text-teal-600' : 'bg-rose-100 text-rose-600';
 
     return (
-        <div className="w-full max-w-5xl mx-auto px-4">
-            {/* Side-by-Side Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                {/* Your Product Card */}
-                <div
-                    className="rounded-2xl overflow-hidden"
-                    style={{
-                        background: '#fff',
-                        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-                        border: '1px solid #f1f5f9'
-                    }}
-                >
-                    {/* Green Top Border */}
-                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #10b981, #34d399)' }} />
-
-                    <div className="p-6">
-                        {/* Header */}
-                        <div className="flex items-center gap-3 mb-5">
-                            <div
-                                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                                style={{ background: 'rgba(16, 185, 129, 0.1)' }}
+        <div className="flex-1 min-w-[140px]">
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                {icon} {label}
+            </label>
+            <div
+                tabIndex={0}
+                onPaste={handlePaste}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                onClick={() => fileInputRef.current?.click()}
+                className={`
+                    cursor-pointer h-40 border-2 border-dashed rounded-xl flex flex-col items-center justify-center 
+                    transition-all relative overflow-hidden outline-none group
+                    ${isFocused ? `${borderColor} ring-4 ${ringColor} ${bgColor}` : 'border-slate-300 bg-white hover:bg-slate-50'}
+                `}
+            >
+                {image ? (
+                    <>
+                        <img src={image} alt="Uploaded" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onImageChange(null); }}
+                                className="bg-white/90 p-2 rounded-full text-slate-900 hover:bg-white transition-colors shadow-lg"
                             >
-                                <Package className="w-5 h-5" style={{ color: '#10b981' }} />
-                            </div>
-                            <h2 className="font-semibold text-lg text-slate-800">Your Product</h2>
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
+                    </>
+                ) : (
+                    <div className="text-center p-4">
+                        <div className={`mx-auto w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${isFocused ? iconBg : 'bg-slate-100 text-slate-400'}`}>
+                            {isFocused ? <Clipboard className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+                        </div>
+                        <p className="text-xs font-medium text-slate-600">
+                            {isFocused ? 'Paste Image' : 'Click or Paste'}
+                        </p>
+                        {subLabel && <p className="text-[10px] text-slate-400 mt-1">{subLabel}</p>}
+                    </div>
+                )}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                />
+            </div>
+        </div>
+    );
+};
 
-                        {/* Product Name Input */}
+export const MultimodalInput: React.FC<MultimodalInputProps> = ({ onImagesReady, isProcessing }) => {
+    const [homeName, setHomeName] = useState('');
+    const [homeProductImage, setHomeProductImage] = useState<string | null>(null);
+    const [homeIngredientsImage, setHomeIngredientsImage] = useState<string | null>(null);
+    const [homeNotes, setHomeNotes] = useState('');
+
+    const [compName, setCompName] = useState('');
+    const [compProductImage, setCompProductImage] = useState<string | null>(null);
+    const [compIngredientsImage, setCompIngredientsImage] = useState<string | null>(null);
+    const [compPrice, setCompPrice] = useState('');
+    const [compNotes, setCompNotes] = useState('');
+
+    const handleStart = () => {
+        if (!homeName || !compName) {
+            alert("Please enter product names.");
+            return;
+        }
+        if (!homeIngredientsImage || !compIngredientsImage) {
+            alert("Please upload at least the ingredients label for each product.");
+            return;
+        }
+        onImagesReady(
+            {
+                homeFront: homeProductImage || '',
+                homeLabel: homeIngredientsImage,
+                compFront: compProductImage || '',
+                compLabel: compIngredientsImage
+            },
+            {
+                homeContext: homeNotes,
+                compContext: compNotes
+            },
+            {
+                homeName,
+                compName,
+                compPrice
+            }
+        );
+    };
+
+    return (
+        <div className="space-y-8">
+            <div className="text-center space-y-2">
+                <h2 className="text-2xl font-bold text-slate-900">Health Product Analysis</h2>
+                <p className="text-slate-500">Paste images of your product labels for an expert breakdown.</p>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-8">
+                {/* Your Product Card */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-teal-500" />
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center text-teal-600">
+                            <Package className="w-5 h-5" />
+                        </div>
+                        <h3 className="font-bold text-lg text-slate-800">Your Product</h3>
+                    </div>
+                    <div className="space-y-5">
                         <input
                             type="text"
-                            placeholder="Product Name"
                             value={homeName}
                             onChange={(e) => setHomeName(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
-                            style={{
-                                border: '1px solid #e2e8f0',
-                                background: '#fff'
-                            }}
+                            placeholder="Product Name"
+                            className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-teal-500"
                         />
-
-                        {/* Upload Labels */}
-                        <div className="grid grid-cols-2 gap-4 mt-5">
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Image className="w-4 h-4 text-slate-400" />
-                                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Product Shot</span>
-                                </div>
-                                <ImageUploadBox
-                                    label="Product Shot"
-                                    captured={!!images.homeFront}
-                                    onImageCaptured={(val) => setImages({ ...images, homeFront: val })}
-                                />
-                            </div>
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <FileText className="w-4 h-4 text-slate-400" />
-                                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ingredients</span>
-                                </div>
-                                <ImageUploadBox
-                                    label="Ingredients"
-                                    captured={!!images.homeLabel}
-                                    onImageCaptured={(val) => setImages({ ...images, homeLabel: val })}
-                                />
-                            </div>
+                        <div className="flex gap-4">
+                            <ImageUploadBox
+                                label="Product Shot"
+                                image={homeProductImage}
+                                onImageChange={setHomeProductImage}
+                                icon={<ImageIcon className="w-3 h-3" />}
+                                colorClass="teal"
+                            />
+                            <ImageUploadBox
+                                label="Ingredients"
+                                image={homeIngredientsImage}
+                                onImageChange={setHomeIngredientsImage}
+                                icon={<FileText className="w-3 h-3" />}
+                                colorClass="teal"
+                            />
                         </div>
-
-                        {/* Key Benefits Textarea */}
                         <textarea
+                            value={homeNotes}
+                            onChange={(e) => setHomeNotes(e.target.value)}
                             placeholder="Key Benefits..."
-                            value={context.homeContext}
-                            onChange={(e) => setContext({ ...context, homeContext: e.target.value })}
-                            className="w-full mt-5 px-4 py-3 rounded-xl text-sm outline-none resize-none h-24"
-                            style={{
-                                border: '1px solid #e2e8f0',
-                                background: '#fff'
-                            }}
+                            className="w-full px-4 py-2 rounded-lg border border-slate-300 h-24 text-sm resize-none"
                         />
                     </div>
                 </div>
 
                 {/* Competitor Card */}
-                <div
-                    className="rounded-2xl overflow-hidden"
-                    style={{
-                        background: '#fff',
-                        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-                        border: '1px solid #f1f5f9'
-                    }}
-                >
-                    {/* Pink/Red Top Border */}
-                    <div style={{ height: '4px', background: 'linear-gradient(90deg, #f43f5e, #fb7185)' }} />
-
-                    <div className="p-6">
-                        {/* Header */}
-                        <div className="flex items-center gap-3 mb-5">
-                            <div
-                                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                                style={{ background: 'rgba(244, 63, 94, 0.1)' }}
-                            >
-                                <Target className="w-5 h-5" style={{ color: '#f43f5e' }} />
-                            </div>
-                            <h2 className="font-semibold text-lg text-slate-800">Competitor</h2>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-rose-500" />
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center text-rose-600">
+                            <Package className="w-5 h-5" />
                         </div>
-
-                        {/* Product Name and Price Inputs */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <h3 className="font-bold text-lg text-slate-800">Competitor</h3>
+                    </div>
+                    <div className="space-y-5">
+                        <div className="grid grid-cols-3 gap-4">
                             <input
                                 type="text"
-                                placeholder="Competitor Name"
                                 value={compName}
                                 onChange={(e) => setCompName(e.target.value)}
-                                className="col-span-2 px-4 py-3 rounded-xl text-sm outline-none"
-                                style={{
-                                    border: '1px solid #e2e8f0',
-                                    background: '#fff'
-                                }}
+                                placeholder="Competitor Name"
+                                className="col-span-2 w-full px-4 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-rose-500"
                             />
                             <input
                                 type="text"
+                                value={compPrice}
+                                onChange={(e) => setCompPrice(e.target.value)}
                                 placeholder="Price"
-                                className="px-4 py-3 rounded-xl text-sm outline-none"
-                                style={{
-                                    border: '1px solid #e2e8f0',
-                                    background: '#fff'
-                                }}
+                                className="w-full px-4 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-rose-500"
                             />
                         </div>
-
-                        {/* Upload Labels */}
-                        <div className="grid grid-cols-2 gap-4 mt-5">
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Image className="w-4 h-4 text-slate-400" />
-                                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Product Shot</span>
-                                </div>
-                                <ImageUploadBox
-                                    label="Product Shot"
-                                    captured={!!images.compFront}
-                                    onImageCaptured={(val) => setImages({ ...images, compFront: val })}
-                                />
-                            </div>
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <FileText className="w-4 h-4 text-slate-400" />
-                                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ingredients</span>
-                                </div>
-                                <ImageUploadBox
-                                    label="Ingredients"
-                                    captured={!!images.compLabel}
-                                    onImageCaptured={(val) => setImages({ ...images, compLabel: val })}
-                                />
-                            </div>
+                        <div className="flex gap-4">
+                            <ImageUploadBox
+                                label="Product Shot"
+                                image={compProductImage}
+                                onImageChange={setCompProductImage}
+                                icon={<ImageIcon className="w-3 h-3" />}
+                                colorClass="rose"
+                            />
+                            <ImageUploadBox
+                                label="Ingredients"
+                                image={compIngredientsImage}
+                                onImageChange={setCompIngredientsImage}
+                                icon={<FileText className="w-3 h-3" />}
+                                colorClass="rose"
+                            />
                         </div>
-
-                        {/* Weaknesses Textarea */}
                         <textarea
+                            value={compNotes}
+                            onChange={(e) => setCompNotes(e.target.value)}
                             placeholder="Weaknesses..."
-                            value={context.compContext}
-                            onChange={(e) => setContext({ ...context, compContext: e.target.value })}
-                            className="w-full mt-5 px-4 py-3 rounded-xl text-sm outline-none resize-none h-24"
-                            style={{
-                                border: '1px solid #e2e8f0',
-                                background: '#fff'
-                            }}
+                            className="w-full px-4 py-2 rounded-lg border border-slate-300 h-24 text-sm resize-none"
                         />
                     </div>
                 </div>
             </div>
 
-            {/* Compare Button */}
-            <div className="flex justify-center mt-10">
+            <div className="flex justify-center pt-4 pb-12">
                 <button
-                    onClick={() => onImagesReady(images, context)}
-                    disabled={!isComplete || isProcessing}
-                    className="flex items-center gap-3 px-8 py-4 rounded-full font-semibold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
-                    style={{
-                        background: isComplete && !isProcessing ? '#0f172a' : '#cbd5e1',
-                        color: '#fff',
-                    }}
+                    onClick={handleStart}
+                    disabled={isProcessing}
+                    className="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-lg font-bold py-4 px-12 rounded-full shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
                 >
                     {isProcessing ? (
-                        <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            Analyzing...
-                        </>
+                        <Loader2 className="w-6 h-6 animate-spin" />
                     ) : (
-                        <>
-                            <Sparkles className="w-5 h-5" />
-                            Compare & Analyze
-                            <ArrowRight className="w-5 h-5" />
-                        </>
+                        <Sparkles className="w-6 h-6 text-teal-400" />
                     )}
+                    {isProcessing ? 'Analyzing...' : 'Compare & Analyze'}
+                    {!isProcessing && <ArrowRight className="w-5 h-5" />}
                 </button>
             </div>
         </div>

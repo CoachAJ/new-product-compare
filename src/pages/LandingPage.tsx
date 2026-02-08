@@ -8,7 +8,7 @@ import type { AnalysisResult } from '../services/GeminiService';
 import { ScoreCard } from '../components/ScoreCard';
 import { MarketingDashboard } from '../components/MarketingDashboard';
 import { VisualAssetGenerator } from '../components/VisualAssetGenerator';
-import { Zap, LogOut } from 'lucide-react';
+import { Leaf, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const LandingPage: React.FC = () => {
@@ -63,12 +63,12 @@ export const LandingPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                         <div
                             className="w-8 h-8 rounded-lg flex items-center justify-center"
-                            style={{ background: '#0f172a' }}
+                            style={{ background: '#0d9488' }}
                         >
-                            <Zap className="text-white w-4 h-4" />
+                            <Leaf className="text-white w-4 h-4" />
                         </div>
-                        <span className="font-semibold text-lg text-slate-800">
-                            HealthCompare<span style={{ color: '#0f172a' }}>AI</span>
+                        <span className="font-bold text-lg tracking-tight text-slate-900">
+                            HealthCompare<span className="text-teal-600">AI</span>
                         </span>
                     </div>
                     {profile && (
